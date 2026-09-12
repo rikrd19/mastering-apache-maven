@@ -1,0 +1,19 @@
+# Maven
+target/
+*.class
+
+# Logs
+*.log
+
+# Maven Wrapper
+.mvn/timing.properties
+
+# IDE - IntelliJ
+.idea/
+*.iml
+
+# IDE - VS Code
+.vscode/
+
+# Sistema operativo
+.DS_Store
