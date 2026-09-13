@@ -385,3 +385,15 @@ Java 21 will be the main modern reference version.
 Java 8 and Java 11 will be used to study legacy and enterprise compatibility, while Java 17 will represent the transition to modern enterprise Java.
 
 Java 26 remains installed as the current/experimental JDK and will be used when useful for demonstrating JDK compatibility and version selection.
+
+
+### `mvn validate`
+
+Validates the Maven project before the build continues.
+This phase checks that the project is correctly structured and that the POM can be processed.
+
+It does not compile the Java source code, run tests, or create the final JAR.
+`validate` is the first phase of the Maven default lifecycle.
+
+```bash
+mvn validate
