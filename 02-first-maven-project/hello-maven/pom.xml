@@ -5,7 +5,8 @@
 
   <groupId>com.renzo.maven</groupId>
   <artifactId>hello-maven</artifactId>
-  <version>1.0-SNAPSHOT</version>
+  <version>1.0.0-SNAPSHOT</version>
+    <packaging>jar</packaging>
 
   <name>hello-maven</name>
   <!-- FIXME change it to the project's website -->

@@ -389,11 +389,19 @@ Java 26 remains installed as the current/experimental JDK and will be used when 
 
 ### `mvn validate`
 
-Validates the Maven project before the build continues.
-This phase checks that the project is correctly structured and that the POM can be processed.
+`mvn validate` executes the `validate` phase of the Maven default lifecycle.
 
-It does not compile the Java source code, run tests, or create the final JAR.
-`validate` is the first phase of the Maven default lifecycle.
+It checks that the project is correct and that all required information is available before the build continues.
 
 ```bash
 mvn validate
+```
+
+### `mvn compile`
+
+`mvn compile` → executes the Maven default lifecycle up to and including the compile phase.
+It compiles the Java source code in src/main/java/ and places the resulting .class files in target/classes/.
+It does not compile or execute the tests.
+```bash
+mvn compile
+```
