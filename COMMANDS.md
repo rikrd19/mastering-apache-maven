@@ -405,3 +405,196 @@ It does not compile or execute the tests.
 ```bash
 mvn compile
 ```
+
+---
+
+## Maven phases, plugins and goals
+
+A Maven lifecycle is composed of phases. A phase represents a stage of the build process.
+
+Plugins provide Maven functionality through goals. A goal is a specific operation provided by a plugin.
+
+For example:
+
+```text
+compiler:3.13.0:compile
+```
+
+means:
+
+* Plugin: `maven-compiler-plugin`
+* Version: `3.13.0`
+* Goal: `compile`
+
+### `mvn package`
+
+`package` is a phase of the Maven default lifecycle.
+
+When running:
+
+```bash
+mvn package
+```
+
+Maven executes the phases required to reach `package` and invokes the plugin goals bound to those phases.
+
+For a JAR project, the lifecycle includes plugin goals such as:
+
+```text
+compile phase
+    ↓
+maven-compiler-plugin:compile
+
+test phase
+    ↓
+maven-surefire-plugin:test
+
+package phase
+    ↓
+maven-jar-plugin:jar
+```
+
+The plugin goal associated with a lifecycle phase depends on the project's packaging and Maven's lifecycle bindings.
+
+---
+
+### `mvn dependency:tree`
+
+A plugin goal can also be executed directly without specifying a lifecycle phase.
+
+```bash
+mvn dependency:tree
+```
+
+This executes the `tree` goal of the `maven-dependency-plugin`.
+
+It displays the project's dependency tree, including direct and transitive dependencies.
+
+For example:
+
+```text
+dependency:3.7.0:tree
+```
+
+means:
+
+* Plugin: `maven-dependency-plugin`
+* Version: `3.7.0`
+* Goal: `tree`
+
+`dependency:tree` is a plugin goal, not a Maven lifecycle phase.
+
+---
+
+### `<pluginManagement>`
+
+`<pluginManagement>` is used to manage plugin versions and configuration.
+
+Example:
+
+```xml
+<pluginManagement>
+    <plugins>
+        <plugin>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.13.0</version>
+        </plugin>
+    </plugins>
+</pluginManagement>
+```
+
+It does not mean that the plugin is automatically executed simply because it appears inside `pluginManagement`.
+
+---
+
+### `<plugins>`
+
+`<plugins>` explicitly declares plugins used by the project.
+
+Example:
+
+```xml
+<plugins>
+    <plugin>
+        <artifactId>maven-compiler-plugin</artifactId>
+    </plugin>
+</plugins>
+```
+
+A plugin declared here can also contain configuration that controls how its goals are executed.
+
+For example:
+
+```xml
+<plugin>
+    <artifactId>maven-compiler-plugin</artifactId>
+    <configuration>
+        <release>17</release>
+    </configuration>
+</plugin>
+```
+
+This configures the compiler plugin to compile the project targeting Java 17.
+
+---
+
+### `mvn help:effective-pom`
+
+Displays the effective POM: the Maven configuration resulting after inheritance, interpolation, profiles and other model processing are applied.
+
+```bash
+mvn help:effective-pom
+```
+
+It is useful for investigating how Maven has resolved the project's configuration.
+
+For example, it can reveal plugin executions associated with lifecycle phases:
+
+```xml
+<execution>
+    <id>default-compile</id>
+    <phase>compile</phase>
+    <goals>
+        <goal>compile</goal>
+    </goals>
+</execution>
+```
+
+It can also show the configuration Maven is actually using for a plugin.
+
+---
+
+### Phase, plugin and goal
+
+These concepts should not be confused:
+
+```text
+Phase
+    ↓
+A stage of the Maven lifecycle
+
+Plugin
+    ↓
+Provides build functionality
+
+Goal
+    ↓
+A specific operation provided by a plugin
+```
+
+For example:
+
+```text
+mvn package
+    ↓
+package = phase
+
+
+mvn dependency:tree
+    ↓
+dependency = plugin
+tree       = goal
+```
+
+A lifecycle phase can cause Maven to execute one or more plugin goals through lifecycle bindings.
+
