@@ -1544,3 +1544,287 @@ mvn clean package
 from the reactor root builds all declared modules in the correct reactor order.
 
 More advanced multi-module selection commands such as `-pl` and `-am` will be documented when they are introduced in the course.
+
+## Multi-Module Project Selection
+
+Maven provides command-line options to control which projects are included in a multi-module reactor build.
+
+The examples below use this project structure:
+
+```text
+13-multi-module/
+├── pom.xml
+├── core/
+│   └── pom.xml
+└── app/
+    └── pom.xml
+```
+
+`app` depends on `core`.
+
+---
+
+### `-pl` — Projects List
+
+`-pl` selects specific projects from the reactor.
+
+```bash
+mvn -pl app package
+```
+
+This selects only `app`.
+
+If `app` depends on another reactor module such as `core`, Maven does not automatically build that dependency:
+
+```text
+App
+ ↓
+Core
+```
+
+The build can therefore fail if `core` is not already available in a repository.
+
+Multiple projects can be selected using commas:
+
+```bash
+mvn -pl core,app package
+```
+
+This explicitly selects both `core` and `app`.
+
+Maven still respects their dependency order:
+
+```text
+Core
+  ↓
+App
+```
+
+The root aggregator is not automatically included when it is not part of the selected project list.
+
+---
+
+### `-am` — Also Make
+
+`-am` means **also make**.
+
+It builds the selected project together with the reactor projects required by that project.
+
+Example:
+
+```bash
+mvn -pl app -am package
+```
+
+`app` depends on `core`, so Maven builds:
+
+```text
+Core
+  ↓
+App
+```
+
+Conceptually:
+
+```text
+-pl app
+    ↓
+select App
+
+-am
+    ↓
+also include required reactor dependencies
+```
+
+This is useful when working on one module while still needing the modules it depends on.
+
+---
+
+### `-amd` — Also Make Dependents
+
+`-amd` means **also make dependents**.
+
+It builds the selected project together with reactor projects that depend on it.
+
+Example:
+
+```bash
+mvn -pl core -amd package
+```
+
+Because `app` depends on `core`, Maven builds:
+
+```text
+Core
+  ↓
+App
+```
+
+Conceptually:
+
+```text
+-pl core
+    ↓
+select Core
+
+-amd
+    ↓
+also include projects that depend on Core
+```
+
+This is useful when a change to a lower-level module may affect its consumers.
+
+---
+
+### `-f` / `--file`
+
+`-f` tells Maven which POM file to use.
+
+Example:
+
+```bash
+mvn -f app/pom.xml package
+```
+
+Maven uses `app/pom.xml` as the project POM.
+
+This is different from `-pl`.
+
+`-pl` selects projects from the reactor.
+
+`-f` explicitly identifies the POM Maven should use.
+
+For example:
+
+```text
+-pl
+ ↓
+select a project within the reactor
+
+-f
+ ↓
+use this specific POM
+```
+
+Using:
+
+```bash
+mvn -f app/pom.xml package
+```
+
+does not automatically cause Maven to build `core`.
+
+If `app` requires `core` and `core` is not available from a repository, dependency resolution can fail.
+
+---
+
+### `-N` / `--non-recursive`
+
+`-N` means **non-recursive**.
+
+It prevents Maven from traversing into child modules.
+
+Example:
+
+```bash
+mvn package -N
+```
+
+When executed from the multi-module root, Maven processes only the root project:
+
+```text
+Multi Module Demo [pom]
+```
+
+It does not build:
+
+```text
+Core [jar]
+App  [jar]
+```
+
+Without `-N`:
+
+```bash
+mvn package
+```
+
+the reactor includes the configured modules:
+
+```text
+Multi Module Demo
+        ↓
+      Core
+        ↓
+       App
+```
+
+With `-N`:
+
+```text
+Multi Module Demo
+```
+
+only the current project is processed.
+
+---
+
+### Multi-Module Selection Summary
+
+```text
+-pl
+    Select specific projects.
+
+-pl core,app
+    Select multiple specific projects.
+
+-am
+    Also build required reactor dependencies.
+
+-amd
+    Also build reactor dependents.
+
+-f
+    Use a specific POM file.
+
+-N
+    Disable recursive processing of child modules.
+```
+
+Example combinations:
+
+```bash
+mvn -pl app package
+```
+
+Select `app`.
+
+```bash
+mvn -pl app -am package
+```
+
+Select `app` and the reactor modules required by it.
+
+```bash
+mvn -pl core -amd package
+```
+
+Select `core` and the reactor modules that depend on it.
+
+```bash
+mvn -pl core,app package
+```
+
+Select both `core` and `app`.
+
+```bash
+mvn -f app/pom.xml package
+```
+
+Use `app/pom.xml` directly.
+
+```bash
+mvn package -N
+```
+
+Process only the current project and do not recurse into modules.
