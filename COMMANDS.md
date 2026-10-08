@@ -49,10 +49,10 @@ cd ..
 ---
 
 ### `find`
-It recursively traverses the directory tree starting from the specific point (.=current directory) and lists everything it finds(files, directories, symlinks, devices, etc.)
-It performs no filtering, does not search by name, and executes nothing. It simply enumerates. The output is one path per line, relative to the starting point.
 
-Searches for files and directories.
+Recursively traverses the directory tree starting from the specified location and lists matching filesystem entries.
+
+For example:
 
 ```bash
 find . -type f
@@ -60,7 +60,9 @@ find . -type f
 
 `.` means the current directory.
 
-`-type f` limits the result to files.
+`-type f` limits the result to regular files.
+
+Without additional filtering, `find` can enumerate files and directories recursively. It does not execute anything merely by listing them.
 
 ---
 
@@ -118,11 +120,11 @@ mvn -version
 
 It shows, among other things:
 
-* Maven version
-* Maven installation directory
-* Java version used by Maven
-* Java home
-* Operating system information
+- Maven version
+- Maven installation directory
+- Java version used by Maven
+- Java home
+- Operating system information
 
 ---
 
@@ -150,6 +152,89 @@ echo "$JAVA_HOME"
 
 ---
 
+### `brew list --versions`
+
+Lists installed Homebrew packages and their versions.
+
+```bash
+brew list --versions | grep -E 'openjdk|maven'
+```
+
+Example:
+
+```text
+maven 3.9.16
+openjdk@17 17.0.9
+openjdk@21 21.0.12.1
+openjdk@25 25.0.4
+openjdk 26.0.1
+```
+
+The exact installed versions depend on the environment.
+
+---
+
+### `export JAVA_HOME`
+
+Defines which JDK installation should be used through `JAVA_HOME`.
+
+On macOS:
+
+```bash
+export JAVA_HOME=$(/usr/libexec/java_home -v <version>)
+```
+
+For example:
+
+```bash
+export JAVA_HOME=$(/usr/libexec/java_home -v 21)
+```
+
+This sets `JAVA_HOME` to the selected JDK.
+
+---
+
+### `export PATH`
+
+Places the selected JDK's binaries at the beginning of `PATH`.
+
+```bash
+export PATH=$JAVA_HOME/bin:$PATH
+```
+
+Together, these commands allow the shell and tools such as Maven to use the selected JDK:
+
+```bash
+export JAVA_HOME=$(/usr/libexec/java_home -v 21)
+export PATH=$JAVA_HOME/bin:$PATH
+```
+
+`JAVA_HOME` identifies the JDK.
+
+`PATH` determines which `java` and `javac` executables are found first.
+
+---
+
+### `javac`
+
+`javac` is the Java compiler.
+
+It takes `.java` source code and produces `.class` files containing JVM bytecode.
+
+For example:
+
+```bash
+javac App.java
+```
+
+The resulting `.class` files contain bytecode that can be executed by a compatible JVM.
+
+A single `.java` file can generate multiple `.class` files, for example when inner or anonymous classes are used.
+
+When compiling code that depends on other classes, `javac` requires the appropriate classpath.
+
+---
+
 ## 3. Git
 
 ### `git --version`
@@ -172,11 +257,11 @@ git status
 
 Useful for seeing:
 
-* modified files
-* new files
-* deleted files
-* staged changes
-* the current branch
+- modified files
+- new files
+- deleted files
+- staged changes
+- the current branch
 
 ---
 
@@ -202,37 +287,11 @@ git commit -m "feat: create initial Maven project with quickstart archetype"
 
 The `-m` option allows the commit message to be specified directly.
 
----
-
-## 4. Maven
-
-```bash
-brew list --versions | grep -E 'openjdk|maven'
-results in:
-```
-```bash
-maven 3.9.16
-openjdk@26.0.1
-openjdk@17 17.0.9
-openjdk@21 21.0.12.1
-openjdk@25 25.0.4
-```
-
----
-`javac` is the Java compiler. It takes `.java` source code and produces `.class` files containing bytecode for the JVM. The name comes from *Java compiler*; the trailing `c` stands for *compiler*. Bytecode is a portable intermediate format: the JVM interprets it and/or JIT-compiles it to machine code at runtime. A single `.java` file can generate multiple `.class` files (inner classes, anonymous classes, etc.), and `javac` requires the correct classpath to resolve dependencies on other classes.
+Commit messages in this course should clearly describe the change.
 
 ---
 
-The first command defines the location of JDK <version>
-```bash
-export JAVA_HOME=$(/usr/libexec/java_home -v <version>)
-```
-The second command ensures that the binaries (java, javac) for this version are executed by default:
-```bash
-export PATH=$JAVA_HOME/bin:$PATH
-```
-Without the second command, JAVA_HOME is defined, but running java -version might still point to a different version in your PATH. By using both, the entire system (the shell, Maven, and other tools) sees the exact same version.
-
+## 4. Maven Installation and Project Generation
 
 ### `mvn archetype:generate`
 
@@ -242,10 +301,15 @@ Generates a new Maven project from an archetype.
 mvn archetype:generate
 ```
 
-Without additional parameters, Maven enters interactive mode and presents a catalog of available archetypes.
+Without additional parameters, Maven enters interactive mode and presents options for generating a project.
 
-----
-`An archetype` is a project template. There are hundreds of them. Some are official, others are published by third parties on Maven Central. Each one generates a different structure: a simple Java project, a web project, a Spring Boot module, a Maven plugin, a multi-module project, etc.
+---
+
+### Maven archetype
+
+An archetype is a project template.
+
+An archetype can generate a predefined Maven project structure such as a simple Java project, a web project, a Maven plugin or other project types.
 
 ---
 
@@ -261,30 +325,44 @@ mvn archetype:generate \
   -DarchetypeVersion=1.5 \
   -DinteractiveMode=false
 ```
----
-The `mvn` script is a shell wrapper that internally launches a JVM and passes arguments to it. `-D` stands for *Define* (it defines a system property); it interprets any argument of the form `-Dkey=value` as a system property (`System.getProperty("key")`).
-
-## Why Maven Uses This Mechanism
-
-Because there is no formal Maven CLI for passing arbitrary parameters to plugins. Maven is a plugin framework; each plugin defines which parameters it accepts. Instead of inventing a syntax like `mvn archetype:generate --group-id=...`, Maven reuses the JVM's native mechanism: system properties.
-
-Rule of thumb: everything that follows `-D` on the `mvn` command line is a parameter that some plugin will read. The `-Dparameter=value` convention is exactly the same as in `java -D...`.
-
----
 
 Important parameters:
 
-* `groupId` → identifies the project namespace.
-* `artifactId` → identifies the project.
-* `archetypeArtifactId` → specifies the project template.
-* `archetypeVersion` → specifies the version of the template.
-* `interactiveMode=false` → runs Maven without interactive questions.
+- `groupId` → identifies the project's namespace.
+- `artifactId` → identifies the project.
+- `archetypeArtifactId` → specifies the project template.
+- `archetypeVersion` → specifies the version of the template.
+- `interactiveMode=false` → runs Maven without interactive questions.
+
+---
+
+### `-D`
+
+The `-D` syntax defines a Java system property.
+
+For example:
+
+```bash
+-DgroupId=com.renzo.maven
+```
+
+Conceptually, Maven receives a property equivalent to:
+
+```java
+System.getProperty("groupId")
+```
+
+Maven plugins can read these properties as parameters.
+
+This mechanism allows plugin configuration to be supplied from the command line.
 
 ---
 
 ## 5. Maven Project Structure
 
-The first Maven project generated in this course contains:
+The main Maven project used in the course is `hello-maven`.
+
+Its relevant structure is:
 
 ```text
 hello-maven/
@@ -294,20 +372,21 @@ hello-maven/
 ├── pom.xml
 └── src/
     ├── main/
-    │   └── java/
-    │       └── com/
-    │           └── ricardo/
-    │               └── maven/
-    │                   └── App.java
+    │   ├── java/
+    │   │   └── com/
+    │   │       └── renzo/
+    │   │           └── maven/
+    │   │               └── App.java
+    │   └── resources/
     └── test/
         └── java/
             └── com/
-                └── ricardos/
+                └── renzo/
                     └── maven/
                         └── AppTest.java
 ```
 
-### Important files
+### Important files and directories
 
 `pom.xml`
 
@@ -321,31 +400,56 @@ Project-level Maven configuration directory.
 
 Contains application source code.
 
+`src/main/resources/`
+
+Contains application resources.
+
 `src/test/java/`
 
 Contains test source code.
 
+`target/`
+
+Contains build output generated by Maven.
+
+Examples include:
+
+```text
+target/classes/
+target/test-classes/
+target/surefire-reports/
+target/*.jar
+```
+
+`target/` is generated output and should not normally be committed to Git.
+
 ---
 
-## 6. Concepts Already Introduced
+## 6. Maven Project and Java Versions
 
 ### Project version vs Java version
 
 These are different concepts.
 
+The following:
+
 ```xml
-<version>1.0-SNAPSHOT</version>
+<version>1.0.0-SNAPSHOT</version>
 ```
 
 is the version of the Maven project.
+
+The following:
 
 ```xml
 <maven.compiler.release>17</maven.compiler.release>
 ```
 
-defines the Java release targeted by the project compilation.
+defines the Java release targeted by project compilation.
 
-`SNAPSHOT` indicates a development version. It does not refer to a Java version.
+`SNAPSHOT` indicates a development version of the Maven artifact.
+
+It does not refer to a Java version.
 
 ---
 
@@ -365,13 +469,13 @@ Project compilation target
 Java 17
 ```
 
-This distinction will be explored further in the course.
+Maven can run using one JDK while the Maven compiler plugin targets another Java release, provided the installed JDK/toolchain supports the requested compilation target.
 
 ---
 
 ## 7. Planned Java LTS Laboratory
 
-The course will progressively include projects targeting the following Java LTS versions:
+The course will progressively include projects targeting the following Java versions:
 
 ```text
 Java 8
@@ -382,63 +486,322 @@ Java 21
 
 Java 21 will be the main modern reference version.
 
-Java 8 and Java 11 will be used to study legacy and enterprise compatibility, while Java 17 will represent the transition to modern enterprise Java.
+Java 8 and Java 11 will be used to study legacy and enterprise compatibility.
 
-Java 26 remains installed as the current/experimental JDK and will be used when useful for demonstrating JDK compatibility and version selection.
+Java 17 will represent the transition to modern enterprise Java.
 
+Java 26 remains an installed current/experimental JDK and can be used when demonstrating JDK compatibility and version selection.
 
-### `mvn validate`
+---
 
-`mvn validate` executes the `validate` phase of the Maven default lifecycle.
+# 8. Maven Lifecycle
 
-It checks that the project is correct and that all required information is available before the build continues.
+Maven provides multiple lifecycles.
+
+The main Maven lifecycles are:
+
+```text
+clean
+default
+site
+```
+
+The `default` lifecycle contains the main build phases.
+
+---
+
+## `mvn validate`
+
+Executes the `validate` phase of the Maven `default` lifecycle.
 
 ```bash
 mvn validate
 ```
 
-### `mvn compile`
+The `validate` phase checks that the project is correctly configured and that the required information is available before the build continues.
 
-`mvn compile` → executes the Maven default lifecycle up to and including the compile phase.
-It compiles the Java source code in src/main/java/ and places the resulting .class files in target/classes/.
-It does not compile or execute the tests.
+---
+
+## `mvn compile`
+
+Executes the Maven `default` lifecycle up to and including the `compile` phase.
+
 ```bash
 mvn compile
 ```
 
----
-
-## Maven phases, plugins and goals
-
-A Maven lifecycle is composed of phases. A phase represents a stage of the build process.
-
-Plugins provide Maven functionality through goals. A goal is a specific operation provided by a plugin.
-
-For example:
+For a Java project, it compiles source code from:
 
 ```text
-compiler:3.13.0:compile
+src/main/java/
 ```
 
-means:
+and places compiled classes under:
 
-* Plugin: `maven-compiler-plugin`
-* Version: `3.13.0`
-* Goal: `compile`
+```text
+target/classes/
+```
 
-### `mvn package`
+It does not compile or execute tests.
 
-`package` is a phase of the Maven default lifecycle.
+---
 
-When running:
+## `mvn test`
+
+Executes the Maven `default` lifecycle up to and including the `test` phase.
+
+```bash
+mvn test
+```
+
+For the Java project, Maven:
+
+- compiles the main source code
+- compiles test source code
+- executes tests through the Maven Surefire Plugin
+
+Test reports are normally generated under:
+
+```text
+target/surefire-reports/
+```
+
+---
+
+## `mvn package`
+
+Executes the Maven `default` lifecycle up to and including the `package` phase.
 
 ```bash
 mvn package
 ```
 
-Maven executes the phases required to reach `package` and invokes the plugin goals bound to those phases.
+For a project with:
 
-For a JAR project, the lifecycle includes plugin goals such as:
+```xml
+<packaging>jar</packaging>
+```
+
+Maven creates a JAR artifact under:
+
+```text
+target/
+```
+
+For example:
+
+```text
+target/hello-maven-1.0.0-SNAPSHOT.jar
+```
+
+`package` creates the artifact for the current project.
+
+It does not install that artifact into the local Maven repository.
+
+---
+
+## `mvn verify`
+
+Executes the Maven `default` lifecycle up to and including the `verify` phase.
+
+```bash
+mvn verify
+```
+
+`verify` occurs after `package` in the default lifecycle.
+
+It allows additional verification steps to run before an artifact is installed or deployed.
+
+Running `verify` does not install the artifact into the local Maven repository.
+
+---
+
+## `mvn install`
+
+Executes the Maven `default` lifecycle up to and including the `install` phase.
+
+```bash
+mvn install
+```
+
+In addition to building the project, Maven installs the project's artifact and POM into the local repository.
+
+The default local repository is:
+
+```text
+~/.m2/repository/
+```
+
+For example:
+
+```text
+~/.m2/repository/com/renzo/maven/hello-maven/1.0.0-SNAPSHOT/
+```
+
+Important distinction:
+
+`install` installs the **current project's artifact** into the local repository.
+
+It does not mean "install all project dependencies."
+
+---
+
+## `mvn deploy`
+
+Executes the Maven `default` lifecycle up to and including the `deploy` phase.
+
+```bash
+mvn deploy
+```
+
+The `deploy` phase publishes the project artifact to a configured remote Maven repository.
+
+A project needs appropriate repository configuration, such as `distributionManagement`, or an alternative deployment repository supplied through Maven configuration.
+
+If no deployment repository is configured, deployment fails.
+
+---
+
+## `mvn clean`
+
+Executes the `clean` lifecycle.
+
+```bash
+mvn clean
+```
+
+The clean lifecycle is separate from the default build lifecycle.
+
+For a standard Maven project, `clean` removes generated build output such as:
+
+```text
+target/
+```
+
+It does not remove:
+
+```text
+src/
+pom.xml
+~/.m2/repository/
+```
+
+---
+
+## `mvn clean package`
+
+Executes the `clean` lifecycle and then the `default` lifecycle up to `package`.
+
+```bash
+mvn clean package
+```
+
+Conceptually:
+
+```text
+clean
+  ↓
+remove previous build output
+  ↓
+package
+  ↓
+validate → compile → test → package
+```
+
+This is a common command when a clean rebuild is required.
+
+---
+
+# 9. Maven Phases, Plugins and Goals
+
+These concepts should not be confused.
+
+```text
+Lifecycle
+    ↓
+contains phases
+
+Phase
+    ↓
+represents a stage of the build
+
+Plugin
+    ↓
+provides build functionality
+
+Goal
+    ↓
+specific operation provided by a plugin
+```
+
+---
+
+## Phase
+
+A phase represents a stage in a Maven lifecycle.
+
+Examples:
+
+```text
+validate
+compile
+test
+package
+verify
+install
+deploy
+```
+
+For example:
+
+```bash
+mvn package
+```
+
+Here:
+
+```text
+package = lifecycle phase
+```
+
+Maven executes the lifecycle phases required to reach `package`.
+
+---
+
+## Plugin
+
+Plugins provide Maven's build functionality.
+
+Examples:
+
+```text
+maven-compiler-plugin
+maven-surefire-plugin
+maven-jar-plugin
+maven-dependency-plugin
+```
+
+---
+
+## Goal
+
+A goal is a specific operation provided by a plugin.
+
+For example:
+
+```text
+maven-compiler-plugin:compile
+```
+
+The plugin provides the `compile` goal.
+
+---
+
+## Lifecycle binding
+
+Maven can bind plugin goals to lifecycle phases.
+
+For a JAR project, examples include:
 
 ```text
 compile phase
@@ -452,25 +815,62 @@ maven-surefire-plugin:test
 package phase
     ↓
 maven-jar-plugin:jar
+
+install phase
+    ↓
+maven-install-plugin:install
+
+deploy phase
+    ↓
+maven-deploy-plugin:deploy
 ```
 
-The plugin goal associated with a lifecycle phase depends on the project's packaging and Maven's lifecycle bindings.
+The exact plugin versions and bindings depend on Maven configuration, packaging and plugin configuration.
 
 ---
 
-### `mvn dependency:tree`
+## Direct plugin goal execution
 
 A plugin goal can also be executed directly without specifying a lifecycle phase.
+
+Example:
 
 ```bash
 mvn dependency:tree
 ```
 
-This executes the `tree` goal of the `maven-dependency-plugin`.
+Here:
 
-It displays the project's dependency tree, including direct and transitive dependencies.
+```text
+dependency = plugin
+tree       = goal
+```
 
-For example:
+It is therefore a plugin goal invocation, not a lifecycle phase.
+
+---
+
+# 10. Maven Dependency Commands
+
+## `mvn dependency:tree`
+
+Displays the project's dependency tree.
+
+```bash
+mvn dependency:tree
+```
+
+It shows direct and transitive dependencies.
+
+Example:
+
+```text
+com.renzo.maven:app:jar:1.0.0-SNAPSHOT
++- com.renzo.maven:core:jar:1.0.0-SNAPSHOT:compile
+\- org.apache.commons:commons-lang3:jar:3.17.0:compile
+```
+
+The notation:
 
 ```text
 dependency:3.7.0:tree
@@ -478,15 +878,104 @@ dependency:3.7.0:tree
 
 means:
 
-* Plugin: `maven-dependency-plugin`
-* Version: `3.7.0`
-* Goal: `tree`
-
-`dependency:tree` is a plugin goal, not a Maven lifecycle phase.
+- Plugin: `maven-dependency-plugin`
+- Version: `3.7.0`
+- Goal: `tree`
 
 ---
 
-### `<pluginManagement>`
+# 11. Maven POM Investigation
+
+## `mvn help:effective-pom`
+
+Displays the effective POM.
+
+```bash
+mvn help:effective-pom
+```
+
+The effective POM represents Maven's resulting project configuration after processing elements such as:
+
+- inheritance
+- interpolation
+- profiles
+- plugin configuration
+- dependency management
+
+It is useful when investigating what Maven is actually using.
+
+For example, it can reveal lifecycle executions:
+
+```xml
+<execution>
+    <id>default-compile</id>
+    <phase>compile</phase>
+    <goals>
+        <goal>compile</goal>
+    </goals>
+</execution>
+```
+
+It can also reveal inherited properties and plugin configuration.
+
+---
+
+## `mvn help:effective-pom -Doutput=effective-pom.xml`
+
+Writes the effective POM to a file.
+
+```bash
+mvn help:effective-pom -Doutput=effective-pom.xml
+```
+
+This is useful for detailed inspection of Maven's effective configuration.
+
+Generated investigation files such as `effective-pom.xml` should not automatically be committed to the project repository.
+
+---
+
+## `mvn help:describe`
+
+Displays detailed information about a Maven plugin or goal.
+
+Example:
+
+```bash
+mvn help:describe \
+  -Dplugin=org.apache.maven.plugins:maven-compiler-plugin \
+  -Ddetail=true \
+  -Dgoal=compile
+```
+
+This can show:
+
+- plugin information
+- goal information
+- lifecycle phase binding
+- available parameters
+- user properties
+
+For example, the compiler plugin's `compile` goal exposes the `release` parameter.
+
+---
+
+## `mvn help:evaluate`
+
+Evaluates a Maven expression.
+
+Example:
+
+```bash
+mvn help:evaluate -Dexpression=environment -Pdev -q -DforceStdout
+```
+
+This is useful for inspecting Maven properties and profile values.
+
+---
+
+# 12. Maven Plugin Configuration
+
+## `<pluginManagement>`
 
 `<pluginManagement>` is used to manage plugin versions and configuration.
 
@@ -503,11 +992,13 @@ Example:
 </pluginManagement>
 ```
 
-It does not mean that the plugin is automatically executed simply because it appears inside `pluginManagement`.
+A plugin appearing only inside `pluginManagement` is not automatically executed merely because it is declared there.
+
+`pluginManagement` provides configuration that can be used by actual plugin declarations.
 
 ---
 
-### `<plugins>`
+## `<plugins>`
 
 `<plugins>` explicitly declares plugins used by the project.
 
@@ -521,9 +1012,9 @@ Example:
 </plugins>
 ```
 
-A plugin declared here can also contain configuration that controls how its goals are executed.
+A plugin declared here can contain configuration that controls how its goals are executed.
 
-For example:
+Example:
 
 ```xml
 <plugin>
@@ -534,67 +1025,522 @@ For example:
 </plugin>
 ```
 
-This configures the compiler plugin to compile the project targeting Java 17.
+This configures the compiler plugin to target Java 17.
 
 ---
 
-### `mvn help:effective-pom`
+# 13. Maven Dependencies and Dependency Management
 
-Displays the effective POM: the Maven configuration resulting after inheritance, interpolation, profiles and other model processing are applied.
+## `<dependencies>`
 
-```bash
-mvn help:effective-pom
-```
+`<dependencies>` declares dependencies that the project actually uses.
 
-It is useful for investigating how Maven has resolved the project's configuration.
-
-For example, it can reveal plugin executions associated with lifecycle phases:
+Example:
 
 ```xml
-<execution>
-    <id>default-compile</id>
-    <phase>compile</phase>
-    <goals>
-        <goal>compile</goal>
-    </goals>
-</execution>
+<dependencies>
+    <dependency>
+        <groupId>org.apache.commons</groupId>
+        <artifactId>commons-lang3</artifactId>
+        <version>3.17.0</version>
+    </dependency>
+</dependencies>
 ```
 
-It can also show the configuration Maven is actually using for a plugin.
+The dependency becomes part of the project's dependency graph.
 
 ---
 
-### Phase, plugin and goal
+## `<dependencyManagement>`
 
-These concepts should not be confused:
+`<dependencyManagement>` centralizes dependency versions and configuration.
+
+Example:
+
+```xml
+<dependencyManagement>
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+            <version>3.17.0</version>
+        </dependency>
+    </dependencies>
+</dependencyManagement>
+```
+
+`dependencyManagement` does **not** automatically add the dependency to the project.
+
+A module still needs to declare the dependency under `<dependencies>`:
+
+```xml
+<dependency>
+    <groupId>org.apache.commons</groupId>
+    <artifactId>commons-lang3</artifactId>
+</dependency>
+```
+
+The version can then be omitted because it is supplied by `dependencyManagement`.
+
+The distinction is:
 
 ```text
-Phase
+dependencyManagement
     ↓
-A stage of the Maven lifecycle
+controls the version/configuration
 
-Plugin
+dependencies
     ↓
-Provides build functionality
+declares actual usage
+```
 
-Goal
-    ↓
-A specific operation provided by a plugin
+---
+
+# 14. Maven Multi-Module Projects
+
+A multi-module Maven project contains multiple Maven projects built together through a root project.
+
+Example structure:
+
+```text
+13-multi-module/
+├── pom.xml
+├── core/
+│   ├── pom.xml
+│   └── src/
+│       └── main/
+│           └── java/
+└── app/
+    ├── pom.xml
+    └── src/
+        └── main/
+            └── java/
+```
+
+---
+
+## Root `pom.xml`
+
+The root project uses:
+
+```xml
+<packaging>pom</packaging>
+```
+
+and declares modules:
+
+```xml
+<modules>
+    <module>core</module>
+    <module>app</module>
+</modules>
+```
+
+This is called **aggregation**.
+
+The root project tells Maven which modules belong to the reactor build.
+
+---
+
+## `mvn clean package` from the root
+
+Running:
+
+```bash
+mvn clean package
+```
+
+from the multi-module root builds the reactor.
+
+Example reactor order:
+
+```text
+Multi Module Demo [pom]
+Core              [jar]
+App               [jar]
+```
+
+Maven determines the correct build order based on the project relationships.
+
+---
+
+## Maven Reactor
+
+The reactor is Maven's mechanism for building multiple related projects together.
+
+In this project:
+
+```text
+Root
+ ├── Core
+ └── App
+```
+
+`App` depends on `Core`.
+
+Therefore Maven builds:
+
+```text
+Root
+  ↓
+Core
+  ↓
+App
+```
+
+before completing the reactor build.
+
+---
+
+## Parent POM and inheritance
+
+A child module can declare the root POM as its parent:
+
+```xml
+<parent>
+    <groupId>com.renzo.maven</groupId>
+    <artifactId>multi-module-demo</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+</parent>
+```
+
+This allows the child to inherit configuration from the parent.
+
+For example, the parent can define:
+
+```xml
+<properties>
+    <maven.compiler.release>17</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+</properties>
+```
+
+and child modules can inherit these properties.
+
+---
+
+## Aggregation vs inheritance vs dependency
+
+These are three different relationships.
+
+### Aggregation
+
+The root lists modules:
+
+```xml
+<modules>
+    <module>core</module>
+    <module>app</module>
+</modules>
+```
+
+This controls which projects are built together.
+
+### Inheritance
+
+The child declares:
+
+```xml
+<parent>
+    ...
+</parent>
+```
+
+This allows configuration to be inherited.
+
+### Dependency
+
+`app` declares:
+
+```xml
+<dependency>
+    <groupId>com.renzo.maven</groupId>
+    <artifactId>core</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+</dependency>
+```
+
+This means `app` actually depends on the artifact produced by `core`.
+
+These concepts can exist simultaneously but they are not the same thing.
+
+---
+
+# 15. Maven Command-Line Error and Debug Options
+
+## `-e`
+
+Enables execution error messages and stack traces.
+
+```bash
+mvn compile -e
+```
+
+Useful when additional exception information is required.
+
+`-e` does not mean "show Maven phases."
+
+---
+
+## `-X`
+
+Enables Maven debug output.
+
+```bash
+mvn compile -X
+```
+
+This produces much more detailed diagnostic information.
+
+It is useful for troubleshooting Maven configuration, plugin execution and dependency resolution.
+
+---
+
+# 16. Maven Build Options
+
+## `-DskipTests`
+
+Skips test execution while still compiling test sources.
+
+```bash
+mvn package -DskipTests
+```
+
+Conceptually:
+
+```text
+compile main code
+        ↓
+compile test code
+        ↓
+do not execute tests
+        ↓
+package
+```
+
+---
+
+## `-Dmaven.test.skip=true`
+
+Skips both test compilation and test execution.
+
+```bash
+mvn package -Dmaven.test.skip=true
+```
+
+This is different from:
+
+```bash
+-DskipTests
+```
+
+because test sources are not compiled when `maven.test.skip=true`.
+
+---
+
+# 17. Maven Build Outputs
+
+Maven normally generates build output under:
+
+```text
+target/
+```
+
+Examples:
+
+```text
+target/classes/
+target/test-classes/
+target/surefire-reports/
+target/*.jar
+```
+
+For a JAR project:
+
+```bash
+mvn package
+```
+
+can produce:
+
+```text
+target/hello-maven-1.0.0-SNAPSHOT.jar
+```
+
+The artifact name is based on Maven coordinates such as:
+
+```text
+artifactId
+version
+packaging
+```
+
+---
+
+# 18. Local Maven Repository
+
+Maven stores downloaded dependencies and locally installed project artifacts in the local repository.
+
+Default location:
+
+```text
+~/.m2/repository/
 ```
 
 For example:
 
 ```text
-mvn package
-    ↓
-package = phase
-
-
-mvn dependency:tree
-    ↓
-dependency = plugin
-tree       = goal
+~/.m2/repository/com/renzo/maven/hello-maven/1.0.0-SNAPSHOT/
 ```
 
-A lifecycle phase can cause Maven to execute one or more plugin goals through lifecycle bindings.
+A dependency that is already available locally does not necessarily produce a new download message when Maven builds the project.
 
+This is why a build can successfully use a dependency without displaying a `Downloading...` message.
+
+---
+
+# 19. Important Maven Distinctions
+
+### `package` vs `install`
+
+```text
+mvn package
+    ↓
+builds the artifact under target/
+
+mvn install
+    ↓
+builds the artifact
+    +
+installs it into ~/.m2/repository/
+```
+
+---
+
+### `verify` vs `install`
+
+```text
+mvn verify
+    ↓
+build and verify
+    ↓
+does not install the artifact
+
+mvn install
+    ↓
+build and verify
+    ↓
+installs the artifact locally
+```
+
+---
+
+### Lifecycle phase vs plugin goal
+
+```bash
+mvn package
+```
+
+`package` is a lifecycle phase.
+
+```bash
+mvn dependency:tree
+```
+
+`dependency:tree` is a direct plugin goal invocation.
+
+---
+
+### `dependencyManagement` vs `dependencies`
+
+```text
+dependencyManagement
+    ↓
+manages versions/configuration
+
+dependencies
+    ↓
+declares actual dependencies
+```
+
+---
+
+### Maven JDK vs project target
+
+```text
+JDK used to run Maven
+        ≠
+necessarily the Java release targeted by the project
+```
+
+---
+
+### Aggregation vs inheritance
+
+```text
+Aggregation
+    ↓
+<modules>
+
+Inheritance
+    ↓
+<parent>
+```
+
+They are related concepts but perform different functions.
+
+---
+
+# 20. Commonly Used Build Commands
+
+Quick reference:
+
+```bash
+mvn validate
+mvn compile
+mvn test
+mvn package
+mvn verify
+mvn install
+mvn deploy
+mvn clean
+mvn clean package
+```
+
+Dependency investigation:
+
+```bash
+mvn dependency:tree
+```
+
+POM investigation:
+
+```bash
+mvn help:effective-pom
+mvn help:describe
+mvn help:evaluate
+```
+
+Debugging:
+
+```bash
+mvn -e compile
+mvn -X compile
+```
+
+Skipping tests:
+
+```bash
+mvn package -DskipTests
+mvn package -Dmaven.test.skip=true
+```
+
+Multi-module builds:
+
+```bash
+mvn clean package
+```
+
+from the reactor root builds all declared modules in the correct reactor order.
+
+More advanced multi-module selection commands such as `-pl` and `-am` will be documented when they are introduced in the course.
