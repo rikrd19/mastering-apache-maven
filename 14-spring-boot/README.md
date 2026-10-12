@@ -1,0 +1,134 @@
+# Lab 14 — Spring Boot and Maven Packaging
+
+## Objective
+
+Build, package, run and inspect a Spring Boot application using Apache Maven and the Java command line.
+
+This laboratory demonstrates the relationship between Maven's build lifecycle, dependency resolution, Spring Boot executable JAR packaging and HTTP endpoint verification.
+
+## Technologies
+
+- Java
+- Apache Maven
+- Spring Boot
+- Embedded Apache Tomcat
+- HTTP and curl
+
+## Project Configuration
+
+The project uses Spring Boot `4.1.1` and configures Java compilation through the `java.version` property in the POM.
+
+The application exposes a basic HTTP endpoint at `/`.
+
+## Application Endpoint
+
+The application uses `@RestController` and `@GetMapping("/")` to handle HTTP GET requests to the root path.
+
+Expected response:
+
+```text
+Hello from Spring Boot!
+```
+
+## 1. Build the Application
+
+Run the following command from the project directory:
+
+```bash
+mvn clean package
+```
+
+- `clean` removes the previous build output.
+- `package` compiles the source code and packages the application.
+- The Spring Boot Maven Plugin repackages the conventional JAR as an executable JAR.
+
+Expected artifact:
+
+```text
+target/spring-boot-demo-1.0.0-SNAPSHOT.jar
+```
+
+The build also preserves the original JAR as:
+
+```text
+target/spring-boot-demo-1.0.0-SNAPSHOT.jar.original
+```
+
+## 2. Run the Executable JAR
+
+```bash
+java -jar target/spring-boot-demo-1.0.0-SNAPSHOT.jar
+```
+
+Spring Boot starts the application and its embedded Tomcat server.
+
+Expected behavior:
+
+- The application starts successfully.
+- Tomcat listens on port `8080`.
+- The process remains running while the server is active.
+
+## 3. Verify the HTTP Endpoint
+
+Open another terminal and execute:
+
+```bash
+curl -i http://localhost:8080/
+```
+
+Expected response:
+
+```text
+HTTP/1.1 200
+Content-Type: text/plain;charset=UTF-8
+
+Hello from Spring Boot!
+```
+
+The HTTP status `200` confirms that the request was handled successfully.
+
+## 4. Inspect the Executable JAR
+
+```bash
+jar tf target/spring-boot-demo-1.0.0-SNAPSHOT.jar
+```
+
+This command lists the entries inside the JAR without executing or modifying it.
+
+Important paths:
+
+| Path | Purpose |
+|---|---|
+| `META-INF/MANIFEST.MF` | JAR metadata and launch configuration |
+| `BOOT-INF/classes/` | Compiled application classes |
+| `BOOT-INF/lib/` | Nested dependency JARs |
+| `org/springframework/boot/loader/` | Spring Boot launch mechanism |
+
+## 5. Inspect the Manifest
+
+```bash
+unzip -p target/spring-boot-demo-1.0.0-SNAPSHOT.jar META-INF/MANIFEST.MF
+```
+
+Important entries:
+
+- `Main-Class`: `org.springframework.boot.loader.launch.JarLauncher`
+- `Start-Class`: `com.renzo.maven.SpringBootDemoApplication`
+- `Spring-Boot-Classes`: `BOOT-INF/classes/`
+- `Spring-Boot-Lib`: `BOOT-INF/lib/`
+
+`Main-Class` identifies the launcher started by `java -jar`. `Start-Class` identifies the application's main class.
+
+## 6. Compare the Original and Repackaged JARs
+
+Inspect the original artifact:
+
+```bash
+jar tf target/spring-boot-demo-1.0.0-SNAPSHOT.jar.original
+```
+
+The original JAR contains the compiled application class and Maven metadata. The repackaged executable JAR additionally contains the Spring Boot launcher and nested dependencies.
+
+The Spring Boot Maven Plugin preserves the original artifact and replaces the main JAR with the executable version.
+
+Use `jar tf` to inspect archive contents. Use `java -jar` to verify that the executable JAR starts, and `curl` to verify the HTTP endpoint.
