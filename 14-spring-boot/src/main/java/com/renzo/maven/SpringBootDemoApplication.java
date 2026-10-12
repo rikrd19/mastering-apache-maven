@@ -16,6 +16,6 @@ public class SpringBootDemoApplication {
 
     @GetMapping("/")
     public String hello() {
-        return "Hello from Spring Boot!";
+        return "Spring Boot build verified!";
     }
 }

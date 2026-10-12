@@ -132,3 +132,33 @@ The original JAR contains the compiled application class and Maven metadata. The
 The Spring Boot Maven Plugin preserves the original artifact and replaces the main JAR with the executable version.
 
 Use `jar tf` to inspect archive contents. Use `java -jar` to verify that the executable JAR starts, and `curl` to verify the HTTP endpoint.
+
+## 7. Rebuild After a Source Code Change
+
+Modify the response returned by the application endpoint in `SpringBootDemoApplication.java`.
+
+Rebuild the application:
+
+```bash
+mvn clean package
+```
+
+Run the newly packaged JAR:
+
+```bash
+java -jar target/spring-boot-demo-1.0.0-SNAPSHOT.jar
+```
+
+Verify the updated response from another terminal:
+
+```bash
+curl -i http://localhost:8080/
+```
+
+Expected response body:
+
+```text
+Spring Boot build verified!
+```
+
+The source code change is not automatically reflected in an existing JAR. Rebuilding the application generates a new artifact containing the updated compiled code.
