@@ -162,3 +162,28 @@ Spring Boot build verified!
 ```
 
 The source code change is not automatically reflected in an existing JAR. Rebuilding the application generates a new artifact containing the updated compiled code.
+
+## 8. Spring Boot Profiles
+
+Spring Boot profiles allow different configurations for different environments.
+
+Configuration files:
+- `src/main/resources/application.properties`: default configuration.
+- `src/main/resources/application-dev.properties`: development configuration.
+- `src/main/resources/application-prod.properties`: production configuration.
+
+The default port is 8080, the `dev` profile uses port 8081, and the `prod` profile uses port 8082.
+
+Run the development profile:
+
+```bash
+mvn -f 14-spring-boot/pom.xml spring-boot:run -Dspring-boot.run.profiles=dev
+```
+
+Run the production profile:
+
+```bash
+mvn -f 14-spring-boot/pom.xml spring-boot:run -Dspring-boot.run.profiles=prod
+```
+
+Spring Boot profiles control runtime configuration. Maven profiles customize Maven build behavior.
