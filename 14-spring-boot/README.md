@@ -27,7 +27,7 @@ The application uses `@RestController` and `@GetMapping("/")` to handle HTTP GET
 Expected response:
 
 ```text
-Hello from Spring Boot!
+Spring Boot build verified!
 ```
 
 ## 1. Build the Application
@@ -82,7 +82,7 @@ Expected response:
 HTTP/1.1 200
 Content-Type: text/plain;charset=UTF-8
 
-Hello from Spring Boot!
+Spring Boot build verified!
 ```
 
 The HTTP status `200` confirms that the request was handled successfully.
@@ -97,13 +97,12 @@ This command lists the entries inside the JAR without executing or modifying it.
 
 Important paths:
 
-| Path | Purpose |
-|---|---|
-| `META-INF/MANIFEST.MF` | JAR metadata and launch configuration |
-| `BOOT-INF/classes/` | Compiled application classes |
-| `BOOT-INF/lib/` | Nested dependency JARs |
-| `org/springframework/boot/loader/` | Spring Boot launch mechanism |
-
+| Path                               | Purpose                               |
+| ---------------------------------- | ------------------------------------- |
+| `META-INF/MANIFEST.MF`             | JAR metadata and launch configuration |
+| `BOOT-INF/classes/`                | Compiled application classes          |
+| `BOOT-INF/lib/`                    | Nested dependency JARs                |
+| `org/springframework/boot/loader/` | Spring Boot launch mechanism          |
 ## 5. Inspect the Manifest
 
 ```bash
@@ -168,6 +167,7 @@ The source code change is not automatically reflected in an existing JAR. Rebuil
 Spring Boot profiles allow different configurations for different environments.
 
 Configuration files:
+
 - `src/main/resources/application.properties`: default configuration.
 - `src/main/resources/application-dev.properties`: development configuration.
 - `src/main/resources/application-prod.properties`: production configuration.
@@ -187,3 +187,47 @@ mvn -f 14-spring-boot/pom.xml spring-boot:run -Dspring-boot.run.profiles=prod
 ```
 
 Spring Boot profiles control runtime configuration. Maven profiles customize Maven build behavior.
+
+## 9. Maven Profiles vs. Spring Boot Profiles
+
+Maven profiles customize the build configuration. Spring Boot profiles
+customize the application configuration at runtime.
+
+### Maven Profile
+
+The `dev` Maven profile is defined in `pom.xml` and sets the
+`environment.name` property to `Development`.
+
+Activate the Maven profile and inspect the active profiles:
+
+```bash
+mvn -f 14-spring-boot/pom.xml help:active-profiles -Pdev
+```
+
+Evaluate the Maven property:
+
+```bash
+mvn -f 14-spring-boot/pom.xml help:evaluate -Dexpression=environment.name -q -DforceStdout -Pdev
+```
+
+Expected output:
+
+```text
+Development
+```
+
+### Spring Boot Profile
+
+Activate the Spring Boot `dev` profile when running the application:
+
+```bash
+mvn -f 14-spring-boot/pom.xml spring-boot:run -Dspring-boot.run.profiles=dev
+```
+
+The application uses port 8081 when this profile is active.
+
+### Key Difference
+
+The Maven option `-Pdev` activates a Maven profile. The property `-Dspring-boot.run.profiles=dev` activates a Spring Boot profile through the Spring Boot Maven Plugin.
+
+Activating one profile does not automatically activate the other.
