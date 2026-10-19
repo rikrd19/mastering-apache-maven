@@ -1,0 +1,9 @@
+stages:
+    - build
+
+build_spring_boot:
+  stage: build
+  image: maven:3.9-eclipse-temurin-21
+  script:
+    - chmod +x mvnw
+    - ./mvnw -B -f 14-spring-boot/pom.xml clean verify
